@@ -1,6 +1,7 @@
+# server/app.py
 from fastapi import FastAPI
 import asyncio
-from inference import main
+from inference import main  # your existing inference.py function
 
 app = FastAPI()
 
@@ -15,3 +16,7 @@ async def reset():
         return {"status": "success"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
+
+def main():
+    import uvicorn
+    uvicorn.run("server.app:app", host="0.0.0.0", port=8000)
