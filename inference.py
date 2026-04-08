@@ -1,18 +1,18 @@
 import asyncio
 import os
 import json
-from openai import AsyncOpenAI
+from openai import OpenAI
 from my_env_v4 import TradeGuardEnv, Action, Trade, Observation, StepResult
 
 # --- Configuration ---
 API_BASE_URL = os.getenv("API_BASE_URL", "https://api-inference.huggingface.co/v1")
-MODEL_NAME = "mistralai/Mistral-7B-Instruct-v0.2"
+MODEL_NAME = os.getenv("MODEL_NAME", "mistralai/Mistral-7B-Instruct-v0.2")
 HF_TOKEN = os.getenv("HF_TOKEN")
 
 if not HF_TOKEN:
     raise ValueError("HF_TOKEN environment variable is required.")
 
-client = AsyncOpenAI(
+client = OpenAI(
     api_key=HF_TOKEN,
     base_url=API_BASE_URL
 )
@@ -86,7 +86,7 @@ async def _call_llm(observation: Observation) -> None:
     trades_str = "\n".join([f"{t.seller} -> {t.buyer}" for t in observation.visible_trades])
     prompt = f"Analyze these trades for cycles: {trades_str}"
     try:
-        await client.chat.completions.create(
+        client.chat.completions.create(
             model=MODEL_NAME,
             messages=[{"role": "user", "content": prompt}],
             max_tokens=10
