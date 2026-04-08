@@ -1,0 +1,20 @@
+version: "1.0"
+name: "tradeguard"
+entrypoint: "my_env_v4:TradeGuardEnv"
+description: "Agentic wash trading detection environment"
+tasks:
+  - id: "EASY"
+    name: "Self-Trade Detection"
+    difficulty: "easy"
+  - id: "MEDIUM"
+    name: "Ping-Pong Detection"
+    difficulty: "medium"
+  - id: "HARD"
+    name: "Cycle Detection"
+    difficulty: "hard"
+inference:
+  command: "python inference.py"
+  environment:
+    API_BASE_URL: "https://api-inference.huggingface.co/v1"
+    MODEL_NAME: "mistralai/Mistral-7B-Instruct-v0.2"
+    HF_TOKEN: ""
