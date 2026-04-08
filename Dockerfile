@@ -19,4 +19,4 @@ ENV MODEL_NAME="mistralai/Mistral-7B-Instruct-v0.2"
 ENV HF_TOKEN=""
 
 # Run inference.py when the container launches
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "7860"]
+CMD ["uvicorn", "server.app:app", "--host", "0.0.0.0", "--port", "7860"]
