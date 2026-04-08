@@ -1,4 +1,0 @@
-pydantic
-openai
-openenv-core
-PyYAML
