@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tradeguard"
+version = "0.1.0"
+description = "Agentic wash trading detection environment"
+dependencies = [
+    "pydantic",
+    "openai",
+    "openenv-core",
+    "PyYAML",
+]
