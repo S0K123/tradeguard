@@ -8,13 +8,16 @@ from my_env_v4 import TradeGuardEnv, Action, Trade, Observation, StepResult
 #API_BASE_URL = os.getenv("API_BASE_URL", "https://api-inference.huggingface.co/v1")
 MODEL_NAME = os.getenv("MODEL_NAME", "mistralai/Mistral-7B-Instruct-v0.2")
 
-API_BASE_URL = os.environ["API_BASE_URL"]
-API_KEY = os.environ["API_KEY"]
+API_BASE_URL = os.getenv("API_BASE_URL")
+API_KEY = os.getenv("API_KEY")
 
-client = OpenAI(
-    api_key=API_KEY,
-    base_url=API_BASE_URL
-)
+if API_KEY and API_BASE_URL:
+    client = OpenAI(
+        api_key=API_KEY,
+        base_url=API_BASE_URL
+    )
+else:
+    client = None
 
 # --- Global Memory ---
 collected_trades = []
@@ -81,6 +84,8 @@ def detect_patterns(trades: list) -> str:
     return ""
 
 async def _call_llm(observation: Observation) -> None:
+    if client is None:
+        return
     """Mandatory LLM call for compliance. Output is ignored as per requirements."""
     trades_str = "\n".join([f"{t.seller} -> {t.buyer}" for t in observation.visible_trades])
     prompt = f"Analyze these trades for cycles: {trades_str}"
