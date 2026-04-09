@@ -1,7 +1,7 @@
 # server/app.py
 from fastapi import FastAPI
 import asyncio
-from inference import main  # your existing inference.py function
+from inference import main as run_inference
 
 app = FastAPI()
 
@@ -12,7 +12,7 @@ def home():
 @app.post("/reset")
 async def reset():
     try:
-        await main()
+        run_inference()   
         return {"status": "success"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
