@@ -141,7 +141,7 @@ async def main():
         collected_trades = [] # Reset memory for each task
         done, step_count, total_reward, rewards = False, 0, 0.0, []
         
-        print(f"[START] task=trade-{task_run} env=tradeguard model={MODEL_NAME}")
+        print(f"[START] task=trade-{task_run}", flush=True)
         
         while not done and step_count < 10:
             step_count += 1
@@ -156,13 +156,13 @@ async def main():
             total_reward += reward
             
             action_str = f"{action.action_type}:{action.content}"
-            print(f"[STEP] step={step_count} action={action_str} reward={reward:.2f} done={str(done).lower()} error=null")
+            print(f"[STEP] step={step_count} reward={reward:.2f}", flush=True)
             
         MAX_TASK_REWARD = 1.0
         score = min(1.0, total_reward / MAX_TASK_REWARD)
         success = score >= 0.5
         
-        print(f"[END] success={str(success).lower()} steps={step_count} rewards={','.join([f'{r:.2f}' for r in rewards])}")
+        print(f"[END] task=trade-{task_run} score={score:.2f} steps={step_count}", flush=True)
 
 if __name__ == "__main__":
     try:
