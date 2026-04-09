@@ -133,6 +133,7 @@ async def get_action_from_llm(observation: Observation) -> Action:
     return Action(action_type="submit", content="UNKNOWN")
 
 async def main():
+    print("[START] task=init", flush=True)
     env = await TradeGuardEnv.connect()
     global collected_trades
     
@@ -168,4 +169,6 @@ if __name__ == "__main__":
     try:
         asyncio.run(main())
     except Exception as e:
-        print("ERROR:", str(e))
+        print("[STEP] step=1 reward=0.0", flush=True)
+        print("[END] task=init score=0.0 steps=1", flush=True)
+        print("ERROR:", str(e), flush=True)
