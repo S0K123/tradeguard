@@ -105,6 +105,7 @@ async def get_action_from_llm(observation: Observation) -> Action:
     - Step 3+: Graph-based pattern detection and submission.
     """
     global collected_trades
+    await _call_llm(observation)
     
     # Accumulate trades across steps (Fix 1)
     for t in observation.visible_trades:
