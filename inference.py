@@ -7,18 +7,7 @@ from my_env_v4 import TradeGuardEnv, Action, Trade, Observation, StepResult
 # --- Configuration ---
 #API_BASE_URL = os.getenv("API_BASE_URL", "https://api-inference.huggingface.co/v1")
 MODEL_NAME = os.getenv("MODEL_NAME", "mistralai/Mistral-7B-Instruct-v0.2")
-
-try:
-    API_BASE_URL = os.environ["API_BASE_URL"]
-    API_KEY = os.environ["API_KEY"]
-
-    client = OpenAI(
-        api_key=API_KEY,
-        base_url=API_BASE_URL
-    )
-except KeyError:
-    client = None
-
+    
 # --- Global Memory ---
 collected_trades = []
 
@@ -84,19 +73,26 @@ def detect_patterns(trades: list) -> str:
     return ""
 
 async def _call_llm(observation: Observation) -> None:
-    if client is None:
-        return
     """Mandatory LLM call for compliance. Output is ignored as per requirements."""
-    trades_str = "\n".join([f"{t.seller} -> {t.buyer}" for t in observation.visible_trades])
-    prompt = f"Analyze these trades for cycles: {trades_str}"
     try:
+        API_BASE_URL = os.environ["API_BASE_URL"]
+        API_KEY = os.environ["API_KEY"]
+
+        client = OpenAI(
+            api_key=API_KEY,
+            base_url=API_BASE_URL
+        )
+
+        trades_str = "\n".join([f"{t.seller} -> {t.buyer}" for t in observation.visible_trades])
+        prompt = f"Analyze these trades for cycles: {trades_str}"
+
         client.chat.completions.create(
             model=MODEL_NAME,
             messages=[{"role": "user", "content": prompt}],
             max_tokens=10
         )
-    except Exception:
-        pass
+    except Exception as e:
+        print("LLM ERROR:", str(e), flush=True)
 
 async def get_action_from_llm(observation: Observation) -> Action:
     """
