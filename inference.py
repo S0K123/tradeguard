@@ -165,4 +165,8 @@ async def main():
         print(f"[END] success={str(success).lower()} steps={step_count} rewards={','.join([f'{r:.2f}' for r in rewards])}")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        main()  
+    except Exception as e:
+        print("ERROR:", str(e))
+
