@@ -5,15 +5,14 @@ from openai import OpenAI
 from my_env_v4 import TradeGuardEnv, Action, Trade, Observation, StepResult
 
 # --- Configuration ---
-API_BASE_URL = os.getenv("API_BASE_URL", "https://api-inference.huggingface.co/v1")
+#API_BASE_URL = os.getenv("API_BASE_URL", "https://api-inference.huggingface.co/v1")
 MODEL_NAME = os.getenv("MODEL_NAME", "mistralai/Mistral-7B-Instruct-v0.2")
-HF_TOKEN = os.getenv("HF_TOKEN")
 
-if not HF_TOKEN:
-    print("Warning: HF_TOKEN not found, skipping LLM")
+API_BASE_URL = os.environ["API_BASE_URL"]
+API_KEY = os.environ["API_KEY"]
 
 client = OpenAI(
-    api_key=HF_TOKEN,
+    api_key=API_KEY,
     base_url=API_BASE_URL
 )
 
