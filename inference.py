@@ -8,15 +8,15 @@ from my_env_v4 import TradeGuardEnv, Action, Trade, Observation, StepResult
 #API_BASE_URL = os.getenv("API_BASE_URL", "https://api-inference.huggingface.co/v1")
 MODEL_NAME = os.getenv("MODEL_NAME", "mistralai/Mistral-7B-Instruct-v0.2")
 
-API_BASE_URL = os.getenv("API_BASE_URL")
-API_KEY = os.getenv("API_KEY")
+try:
+    API_BASE_URL = os.environ["API_BASE_URL"]
+    API_KEY = os.environ["API_KEY"]
 
-if API_KEY and API_BASE_URL:
     client = OpenAI(
         api_key=API_KEY,
         base_url=API_BASE_URL
     )
-else:
+except KeyError:
     client = None
 
 # --- Global Memory ---
