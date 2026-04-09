@@ -87,9 +87,8 @@ async def _call_llm(observation: Observation) -> None:
         prompt = f"Analyze these trades for cycles: {trades_str}"
 
         client.chat.completions.create(
-            model=MODEL_NAME,
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=10
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": prompt}]
         )
     except Exception as e:
         print("LLM ERROR:", str(e), flush=True)
