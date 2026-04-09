@@ -10,7 +10,7 @@ MODEL_NAME = os.getenv("MODEL_NAME", "mistralai/Mistral-7B-Instruct-v0.2")
 HF_TOKEN = os.getenv("HF_TOKEN")
 
 if not HF_TOKEN:
-    raise ValueError("HF_TOKEN environment variable is required.")
+    print("Warning: HF_TOKEN not found, skipping LLM")
 
 client = OpenAI(
     api_key=HF_TOKEN,
@@ -133,7 +133,7 @@ async def get_action_from_llm(observation: Observation) -> Action:
     return Action(action_type="submit", content="UNKNOWN")
 
 async def main():
-    env = await TradeGuardEnv.from_docker_image()
+    env = await TradeGuardEnv.connect()
     global collected_trades
     
     for task_run in range(3):
@@ -169,4 +169,3 @@ if __name__ == "__main__":
         asyncio.run(main())
     except Exception as e:
         print("ERROR:", str(e))
-
