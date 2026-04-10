@@ -1,7 +1,7 @@
 import asyncio
 import os
 import json
-from openai import OpenAI
+from openai import OpenAI, AsyncOpenAI
 from my_env_v4 import TradeGuardEnv, Action, Trade, Observation, StepResult
 
 # --- Configuration ---
@@ -73,16 +73,16 @@ def detect_patterns(trades: list) -> str:
     return ""
 
 async def _call_llm(observation: Observation) -> None:
-    client = OpenAI(
+    client = AsyncOpenAI(      
         api_key=os.environ["API_KEY"],
         base_url=os.environ["API_BASE_URL"]
     )
     try:
-        response = client.responses.create(
+        response = await client.chat.completions.create(  
             model=os.environ["MODEL_NAME"],
-            input="ping"
+            messages=[{"role": "user", "content": "ping"}]
         )
-        if response.output_text:
+        if response.choices[0].message.content:
             print("LLM CALLED SUCCESSFULLY", flush=True)
     except Exception as e:
         print(f"LLM ERROR: {str(e)}", flush=True)
@@ -94,8 +94,8 @@ async def get_action_from_llm(observation: Observation) -> Action:
     - Step 3+: Graph-based pattern detection and submission.
     """
     global collected_trades
-    _call_llm()
-    #await _call_llm(observation)
+    #_call_llm()
+    await _call_llm(observation)
     
     # Accumulate trades across steps (Fix 1)
     for t in observation.visible_trades:
