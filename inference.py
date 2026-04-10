@@ -86,9 +86,9 @@ async def _call_llm(observation: Observation) -> None:
     trades_str = "\n".join([f"{t.seller} -> {t.buyer}" for t in observation.visible_trades])
     prompt = f"Analyze these trades for cycles: {trades_str}"
     
-    client.chat.completions.create(
+    client.responses.create(
         model=MODEL_NAME,
-        messages=[{"role": "user", "content": prompt}]
+        input=prompt
     )
     
     print("LLM CALLED", flush=True)
