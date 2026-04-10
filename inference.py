@@ -72,7 +72,6 @@ def detect_patterns(trades: list) -> str:
 
     return ""
 
-
 async def _call_llm(observation: Observation) -> None:
     client = OpenAI(
         api_key=os.environ["API_KEY"],
@@ -83,11 +82,11 @@ async def _call_llm(observation: Observation) -> None:
             model=os.environ["MODEL_NAME"],
             input="ping"
         )
-        _ = response.output_text
-        print("LLM CALLED SUCCESSFULLY", flush=True)
+        if response.output_text:
+            print("LLM CALLED SUCCESSFULLY", flush=True)
     except Exception as e:
         print(f"LLM ERROR: {str(e)}", flush=True)
-
+        
 async def get_action_from_llm(observation: Observation) -> Action:
     """
     Hybrid Agent Logic:
@@ -95,7 +94,8 @@ async def get_action_from_llm(observation: Observation) -> Action:
     - Step 3+: Graph-based pattern detection and submission.
     """
     global collected_trades
-    await _call_llm(observation)
+    _call_llm()
+    #await _call_llm(observation)
     
     # Accumulate trades across steps (Fix 1)
     for t in observation.visible_trades:
@@ -107,8 +107,8 @@ async def get_action_from_llm(observation: Observation) -> Action:
 
     # 1. EXPLORATION PHASE (Steps 1 & 2)
     if step < 2:
-        if step == 1:
-            await _call_llm(observation) # Compliance call
+        #if step == 1:
+        #   await _call_llm(observation) # Compliance call
             
         if trades:
             # Explore ALL unique traders instead of same edge
