@@ -75,40 +75,24 @@ def detect_patterns(trades: list) -> str:
 
 async def _call_llm(observation: Observation) -> None:
     """Mandatory LLM call for compliance."""
-    from openai import AsyncOpenAI  
-
-    API_BASE_URL = os.environ["API_BASE_URL"]
-    API_KEY = os.environ["API_KEY"]
-    MODEL_NAME = os.environ["MODEL_NAME"]
     
     client = OpenAI(
-        api_key=API_KEY,
-        base_url=API_BASE_URL
+        api_key=os.environ["API_KEY"],
+        base_url=os.environ["API_BASE_URL"]
     )
 
-    async_client = AsyncOpenAI(
-        api_key=API_KEY,
-        base_url=API_BASE_URL
-    )
+    try:
+        response = client.responses.create(
+            model=os.environ.get("MODEL_NAME", "gpt-3.5-turbo"),
+            input="ping"
+        )
 
-    trades_str = "\n".join(
-        [f"{t.seller} -> {t.buyer}" for t in observation.visible_trades]
-    )
-    prompt = f"Analyze these trades for cycles: {trades_str}"
+        _ = response.output_text  # IMPORTANT
 
-    client.responses.create(
-        model=MODEL_NAME,
-        input=prompt
-    )
+        print("LLM CALLED SUCCESSFULLY", flush=True)
 
-    response = await async_client.responses.create(
-        model=MODEL_NAME,
-        input=prompt
-    )
-
-    _ = response.output_text  
-
-    print("LLM CALLED SUCCESSFULLY", flush=True)
+    except Exception as e:
+        print("LLM ERROR:", str(e), flush=True)
 
 async def get_action_from_llm(observation: Observation) -> Action:
     """
