@@ -6,7 +6,7 @@ from my_env_v4 import TradeGuardEnv, Action, Trade, Observation, StepResult
 
 # --- Configuration ---
 #API_BASE_URL = os.getenv("API_BASE_URL", "https://api-inference.huggingface.co/v1")
-MODEL_NAME = os.getenv("MODEL_NAME", "mistralai/Mistral-7B-Instruct-v0.2")
+#MODEL_NAME = os.getenv("MODEL_NAME", "mistralai/Mistral-7B-Instruct-v0.2")
     
 # --- Global Memory ---
 collected_trades = []
@@ -76,6 +76,7 @@ async def _call_llm(observation: Observation) -> None:
     """Mandatory LLM call for compliance. Output is ignored as per requirements."""
     API_BASE_URL = os.environ["API_BASE_URL"]
     API_KEY = os.environ["API_KEY"]
+    MODEL_NAME = os.environ["MODEL_NAME"]
     
     client = OpenAI(
         api_key=API_KEY,
@@ -86,7 +87,7 @@ async def _call_llm(observation: Observation) -> None:
     prompt = f"Analyze these trades for cycles: {trades_str}"
     
     client.chat.completions.create(
-        model="gpt-3.5-turbo",
+        model=MODEL_NAME,
         messages=[{"role": "user", "content": prompt}]
     )
     
