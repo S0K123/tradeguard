@@ -74,25 +74,20 @@ def detect_patterns(trades: list) -> str:
 
 
 async def _call_llm(observation: Observation) -> None:
-    """Mandatory LLM call for compliance."""
-    
     client = OpenAI(
         api_key=os.environ["API_KEY"],
         base_url=os.environ["API_BASE_URL"]
     )
-
     try:
-        response = client.responses.create(
+        response = client.chat.completions.create(
             model=os.environ.get("MODEL_NAME", "gpt-3.5-turbo"),
-            input="ping"
+            messages=[{"role": "user", "content": "ping"}],
+            max_tokens=5
         )
-
-        _ = response.output_text  # IMPORTANT
-
+        _ = response.choices[0].message.content
         print("LLM CALLED SUCCESSFULLY", flush=True)
-
     except Exception as e:
-        print("LLM ERROR:", str(e), flush=True)
+        print(f"LLM ERROR: {str(e)}", flush=True)
 
 async def get_action_from_llm(observation: Observation) -> Action:
     """
