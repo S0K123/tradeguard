@@ -74,24 +74,23 @@ def detect_patterns(trades: list) -> str:
 
 async def _call_llm(observation: Observation) -> None:
     """Mandatory LLM call for compliance. Output is ignored as per requirements."""
-    try:
-        API_BASE_URL = os.environ["API_BASE_URL"]
-        API_KEY = os.environ["API_KEY"]
-
-        client = OpenAI(
-            api_key=API_KEY,
-            base_url=API_BASE_URL
-        )
-
-        trades_str = "\n".join([f"{t.seller} -> {t.buyer}" for t in observation.visible_trades])
-        prompt = f"Analyze these trades for cycles: {trades_str}"
-
-        client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": prompt}]
-        )
-    except Exception as e:
-        print("LLM ERROR:", str(e), flush=True)
+    API_BASE_URL = os.environ["API_BASE_URL"]
+    API_KEY = os.environ["API_KEY"]
+    
+    client = OpenAI(
+        api_key=API_KEY,
+        base_url=API_BASE_URL
+    )
+    
+    trades_str = "\n".join([f"{t.seller} -> {t.buyer}" for t in observation.visible_trades])
+    prompt = f"Analyze these trades for cycles: {trades_str}"
+    
+    client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[{"role": "user", "content": prompt}]
+    )
+    
+    print("LLM CALLED", flush=True)
 
 async def get_action_from_llm(observation: Observation) -> Action:
     """
