@@ -25,6 +25,14 @@ class StepResult(BaseModel):
 
 # --- Environment Implementation ---
 
+EPS = 1e-6
+
+def safe_reward(r: float) -> float:
+    """Strictly clamps reward between (0, 1)."""
+    if r <= 0: return EPS
+    if r >= 1: return 1 - EPS
+    return r
+
 class TradeGuardEnv:
     def __init__(self):
         # 3 deterministic tasks with added noise trades
@@ -103,9 +111,8 @@ class TradeGuardEnv:
 
     async def step(self, action: Action) -> StepResult:
         """Executes one step in the environment."""
-        EPS = 1e-6
         if self.is_done:
-            return StepResult(observation=self._get_observation(), reward=EPS, done=True)
+            return StepResult(observation=self._get_observation(), reward=safe_reward(0.0), done=True)
 
         self.current_step += 1
         reward = 0.0
@@ -140,11 +147,8 @@ class TradeGuardEnv:
         # Apply step penalty: increases with time to encourage efficiency
         reward -= (0.05 * self.current_step)
         
-        # STRICT clamp (0,1)
-        if reward <= 0:
-            reward = EPS
-        elif reward >= 1:
-            reward = 1 - EPS
+        # FINAL STRICT WRAPPER
+        reward = safe_reward(reward)
         
         self.total_reward += reward
 
