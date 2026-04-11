@@ -10,7 +10,6 @@ API_KEY = os.environ.get("API_KEY")
 MODEL_NAME = os.environ.get("MODEL_NAME", "mistralai/Mistral-7B-Instruct-v0.2")
 
 if not API_KEY or not API_BASE_URL:
-    # During local testing, ensure these are set. In the validator, they are automatic.
     pass 
 
 EPS = 1e-6
@@ -106,17 +105,15 @@ async def main():
             clamped_reward = max(EPS, min(1 - EPS, reward))
             print(f"[STEP] step={step_count} reward={clamped_reward:.6f}", flush=True)
         
-        # STRICT RANGE FIX: Clamp score for [END] log with high precision
-        MAX_TASK_REWARD = 1.0
-        raw_score = total_reward / MAX_TASK_REWARD
-        score = max(EPS, min(1 - EPS, raw_score))
+        # FINAL SCORING FIX: Normalize based on average reward per step
+        avg_reward = total_reward / max(step_count, 1)
+        score = max(EPS, min(1 - EPS, avg_reward))
         print(f"[END] task=trade-{task_run} score={score:.6f} steps={step_count}", flush=True)
 
 if __name__ == "__main__":
     try:
         asyncio.run(main())
     except Exception as e:
-        # Emergency logs with EPS values
         print(f"[STEP] step=1 reward={EPS}", flush=True)
         print(f"[END] task=init score={EPS} steps=1", flush=True)
         print("CRITICAL ERROR:", str(e), flush=True)
