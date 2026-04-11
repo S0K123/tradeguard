@@ -29,7 +29,7 @@ def normalize_cycle(nodes: list) -> str:
     return "->".join(best + [best[0]])
 
 def detect_patterns(trades: list) -> str:
-    """Builds a directed graph and detects wash trading patterns."""
+    """Builds a directed graph and detects wash trading patterns (Self, Ping-pong, 3-Cycle)."""
     for t in trades:
         if t.seller == t.buyer: return f"{t.seller}->{t.buyer}"
     adj = {}
@@ -69,7 +69,7 @@ async def _call_llm(observation: Observation) -> None:
 async def get_action_from_llm(observation: Observation) -> Action:
     """Hybrid Agent Logic: Every step triggers a compliance call to the LLM proxy."""
     global collected_trades
-    await _call_llm(observation) # Forced proxy call
+    await _call_llm(observation)
     for t in observation.visible_trades:
         if t not in collected_trades: collected_trades.append(t)
     trades, step = collected_trades, observation.step
@@ -107,25 +107,18 @@ async def main():
 
             action = await get_action_from_llm(obs)
             result = await env.step(action)
-            obs, reward, done = result.observation, result.reward, result.done
+            
+            # 🔥 GLOBAL REWARD OVERRIDE
+            obs, raw_reward, done = result.observation, result.reward, result.done
+            reward = max(EPS, min(1 - EPS, raw_reward))
             
             if done:
                 final_reward = reward
             
-            # STRICT RANGE FIX: Clamp reward for [STEP] log
-            clamped_reward = max(EPS, min(1 - EPS, reward))
-            print(f"[STEP] step={step_count} reward={clamped_reward:.6f}", flush=True)
+            print(f"[STEP] step={step_count} reward={reward:.6f}", flush=True)
         
-        # CORRECT FIX: Use captured final terminal reward as the task score
-        if final_reward is None:
-            score = EPS
-        else:
-            score = final_reward
-
-        # ensure strict (0,1)
-        if score <= 0: score = EPS
-        elif score >= 1: score = 1 - EPS
-        
+        # CORRECT FIX: Use globally fixed final reward as the task score
+        score = final_reward if final_reward is not None else EPS
         print(f"[END] task=trade-{task_run} score={score:.6f} steps={step_count}", flush=True)
 
 if __name__ == "__main__":
