@@ -139,8 +139,14 @@ class TradeGuardEnv:
         # Apply step penalty: increases with time to encourage efficiency
         reward -= (0.05 * self.current_step)
         
-        # Clamp reward [0, 1]
-        reward = float(max(0.0, min(1.0, reward)))
+        EPS = 1e-6
+        
+        # STRICT clamp (0,1)
+        if reward <= 0:
+            reward = EPS
+        elif reward >= 1:
+            reward = 1 - EPS
+        
         self.total_reward += reward
 
         if self.current_step >= self.max_steps:
