@@ -103,8 +103,9 @@ class TradeGuardEnv:
 
     async def step(self, action: Action) -> StepResult:
         """Executes one step in the environment."""
+        EPS = 1e-6
         if self.is_done:
-            return StepResult(observation=self._get_observation(), reward=0.0, done=True)
+            return StepResult(observation=self._get_observation(), reward=EPS, done=True)
 
         self.current_step += 1
         reward = 0.0
@@ -138,8 +139,6 @@ class TradeGuardEnv:
         
         # Apply step penalty: increases with time to encourage efficiency
         reward -= (0.05 * self.current_step)
-        
-        EPS = 1e-6
         
         # STRICT clamp (0,1)
         if reward <= 0:
