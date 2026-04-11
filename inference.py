@@ -85,9 +85,14 @@ async def get_action_from_llm(observation: Observation) -> Action:
 async def main():
     print("[START] task=init", flush=True)
     try:
-        env = await TradeGuardEnv.from_docker_image()
+        # Use connect() to match your environment's expected entrypoint
+        env = await TradeGuardEnv.connect()
     except Exception:
-        from my_env_v4 import env
+        try:
+            env = await TradeGuardEnv.from_docker_image()
+        except Exception:
+            from my_env_v4 import env
+    
     global collected_trades
     for task_run in range(3):
         obs = await env.reset()
@@ -101,13 +106,15 @@ async def main():
             obs, reward, done = result.observation, result.reward, result.done
             total_reward += reward
             
-            # STRICT RANGE FIX: Clamp reward for [STEP] log with high precision
+            # STRICT RANGE FIX: Clamp reward for [STEP] log
             clamped_reward = max(EPS, min(1 - EPS, reward))
             print(f"[STEP] step={step_count} reward={clamped_reward:.6f}", flush=True)
         
-        # FINAL SCORING FIX: Normalize based on average reward per step
-        avg_reward = total_reward / max(step_count, 1)
-        score = max(EPS, min(1 - EPS, avg_reward))
+        # CORRECT FIX: Use result.reward as the final score from environment
+        score = result.reward
+        if score <= 0: score = EPS
+        elif score >= 1: score = 1 - EPS
+        
         print(f"[END] task=trade-{task_run} score={score:.6f} steps={step_count}", flush=True)
 
 if __name__ == "__main__":
