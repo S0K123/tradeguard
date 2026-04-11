@@ -29,7 +29,7 @@ def normalize_cycle(nodes: list) -> str:
     return "->".join(best + [best[0]])
 
 def detect_patterns(trades: list) -> str:
-    """Builds a directed graph and detects wash trading patterns (Self, Ping-pong, 3-Cycle)."""
+    """Builds a directed graph and detects wash trading patterns."""
     for t in trades:
         if t.seller == t.buyer: return f"{t.seller}->{t.buyer}"
     adj = {}
@@ -85,7 +85,6 @@ async def get_action_from_llm(observation: Observation) -> Action:
 async def main():
     print("[START] task=init", flush=True)
     try:
-        # Use connect() to match your environment's expected entrypoint
         env = await TradeGuardEnv.connect()
     except Exception:
         try:
@@ -97,21 +96,33 @@ async def main():
     for task_run in range(3):
         obs = await env.reset()
         collected_trades = [] 
-        done, step_count, total_reward = False, 0, 0.0
+        done, step_count, final_reward = False, 0, None
+        
         print(f"[START] task=trade-{task_run}", flush=True)
-        while not done and step_count < 10:
+        
+        while not done:
             step_count += 1
+            if step_count > 10:
+                break
+
             action = await get_action_from_llm(obs)
             result = await env.step(action)
             obs, reward, done = result.observation, result.reward, result.done
-            total_reward += reward
+            
+            if done:
+                final_reward = reward
             
             # STRICT RANGE FIX: Clamp reward for [STEP] log
             clamped_reward = max(EPS, min(1 - EPS, reward))
             print(f"[STEP] step={step_count} reward={clamped_reward:.6f}", flush=True)
         
-        # CORRECT FIX: Use result.reward as the final score from environment
-        score = result.reward
+        # CORRECT FIX: Use captured final terminal reward as the task score
+        if final_reward is None:
+            score = EPS
+        else:
+            score = final_reward
+
+        # ensure strict (0,1)
         if score <= 0: score = EPS
         elif score >= 1: score = 1 - EPS
         
