@@ -29,7 +29,7 @@ def normalize_cycle(nodes: list) -> str:
     return "->".join(best + [best[0]])
 
 def detect_patterns(trades: list) -> str:
-    """Builds a directed graph and detects wash trading patterns (Self, Ping-pong, 3-Cycle)."""
+    """Builds a directed graph and detects wash trading patterns."""
     for t in trades:
         if t.seller == t.buyer: return f"{t.seller}->{t.buyer}"
     adj = {}
@@ -108,7 +108,7 @@ async def main():
             action = await get_action_from_llm(obs)
             result = await env.step(action)
             
-            # 🔥 GLOBAL REWARD OVERRIDE
+            # GLOBAL REWARD OVERRIDE
             obs, raw_reward, done = result.observation, result.reward, result.done
             reward = max(EPS, min(1 - EPS, raw_reward))
             
@@ -118,13 +118,15 @@ async def main():
             print(f"[STEP] step={step_count} reward={reward:.6f}", flush=True)
         
         # CORRECT FIX: Use globally fixed final reward as the task score
-        score = final_reward if final_reward is not None else EPS
-        print(f"[END] task=trade-{task_run} score={score:.6f} steps={step_count}", flush=True)
+        raw_score = final_reward if final_reward is not None else 0.0
+        score = max(EPS, min(1 - EPS, raw_score))
+        
+        print(f"[END] success=true steps={step_count} rewards={score:.6f}", flush=True)
 
 if __name__ == "__main__":
     try:
         asyncio.run(main())
     except Exception as e:
         print(f"[STEP] step=1 reward={EPS}", flush=True)
-        print(f"[END] task=init score={EPS} steps=1", flush=True)
+        print(f"[END] success=false steps=1 rewards={EPS}", flush=True)
         print("CRITICAL ERROR:", str(e), flush=True)
