@@ -29,7 +29,7 @@ def normalize_cycle(nodes: list) -> str:
     return "->".join(best + [best[0]])
 
 def detect_patterns(trades: list) -> str:
-    """Builds a directed graph and detects wash trading patterns."""
+    """Builds a directed graph and detects wash trading patterns (Self, Ping-pong, 3-Cycle)."""
     for t in trades:
         if t.seller == t.buyer: return f"{t.seller}->{t.buyer}"
     adj = {}
@@ -108,20 +108,21 @@ async def main():
             action = await get_action_from_llm(obs)
             result = await env.step(action)
             
-            # GLOBAL REWARD OVERRIDE
+            # 🔥 GLOBAL REWARD OVERRIDE
             obs, raw_reward, done = result.observation, result.reward, result.done
             reward = max(EPS, min(1 - EPS, raw_reward))
             
             if done:
                 final_reward = reward
             
-            print(f"[STEP] step={step_count} reward={reward:.6f}", flush=True)
+            # COMPLIANT LOG FORMAT
+            action_str = f"{action.action_type}:{action.content}"
+            print(f"[STEP] step={step_count} action={action_str} reward={reward:.6f} done={str(done).lower()} error=null", flush=True)
         
-        # CORRECT FIX: Use globally fixed final reward as the task score
+        # COMPLIANT LOG FORMAT + CLAMPED SCORE
         raw_score = final_reward if final_reward is not None else 0.0
         score = max(EPS, min(1 - EPS, raw_score))
-        
-        print(f"[END] success=true steps={step_count} rewards={score:.6f}", flush=True)
+        print(f"[END] success={str(score >= 0.5).lower()} steps={step_count} rewards={score:.6f}", flush=True)
 
 if __name__ == "__main__":
     try:
