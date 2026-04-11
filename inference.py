@@ -14,6 +14,12 @@ if not API_KEY or not API_BASE_URL:
 
 EPS = 1e-6
 
+def safe_reward(r: float) -> float:
+    """Strictly clamps reward between (0, 1)."""
+    if r <= 0: return EPS
+    if r >= 1: return 1 - EPS
+    return r
+
 # --- Global Memory ---
 collected_trades = []
 
@@ -110,24 +116,23 @@ async def main():
             
             # 🔥 GLOBAL REWARD OVERRIDE
             obs, raw_reward, done = result.observation, result.reward, result.done
-            reward = max(EPS, min(1 - EPS, raw_reward))
+            reward = safe_reward(raw_reward)
             
             if done:
                 final_reward = reward
             
-            # COMPLIANT LOG FORMAT
             action_str = f"{action.action_type}:{action.content}"
             print(f"[STEP] step={step_count} action={action_str} reward={reward:.6f} done={str(done).lower()} error=null", flush=True)
         
-        # COMPLIANT LOG FORMAT + CLAMPED SCORE
         raw_score = final_reward if final_reward is not None else 0.0
-        score = max(EPS, min(1 - EPS, raw_score))
+        score = safe_reward(raw_score)
+        
         print(f"[END] success={str(score >= 0.5).lower()} steps={step_count} rewards={score:.6f}", flush=True)
 
 if __name__ == "__main__":
     try:
         asyncio.run(main())
     except Exception as e:
-        print(f"[STEP] step=1 reward={EPS}", flush=True)
-        print(f"[END] success=false steps=1 rewards={EPS}", flush=True)
+        print(f"[STEP] step=1 reward={safe_reward(0.0)}", flush=True)
+        print(f"[END] success=false steps=1 rewards={safe_reward(0.0)}", flush=True)
         print("CRITICAL ERROR:", str(e), flush=True)
