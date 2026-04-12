@@ -12,7 +12,7 @@ MODEL_NAME = os.environ.get("MODEL_NAME", "mistralai/Mistral-7B-Instruct-v0.2")
 if not API_KEY or not API_BASE_URL:
     pass 
 
-EPS = 1e-6
+EPS = 0.01
 
 # --- Global Memory ---
 collected_trades = []
@@ -96,7 +96,7 @@ async def main():
     for task_run in range(3):
         obs = await env.reset()
         collected_trades = [] 
-        done, step_count, final_reward = False, 0, None
+        done, step_count, final_reward = False, 0, EPS
         
         print(f"[START] task=trade-{task_run}", flush=True)
         
@@ -111,10 +111,10 @@ async def main():
             # 🔥 GLOBAL REWARD OVERRIDE
             obs, raw_reward, done = result.observation, result.reward, result.done
             reward = raw_reward
-            if reward <= 0:
+            if reward <= EPS:
                 reward = EPS
-            elif reward >= 1:
-                reward = 1 - EPS
+            elif reward >= (1.0 - EPS):
+                reward = 1.0 - EPS
             
             if done:
                 final_reward = reward
@@ -122,12 +122,11 @@ async def main():
             action_str = f"{action.action_type}:{action.content}"
             print(f"[STEP] step={step_count} action={action_str} reward={reward:.6f} done={str(done).lower()} error=null", flush=True)
         
-        raw_score = final_reward if final_reward is not None else 0.0
-        score = raw_score
-        if score <= 0:
+        score = final_reward
+        if score <= EPS:
             score = EPS
-        elif score >= 1:
-            score = 1 - EPS
+        elif score >= (1.0 - EPS):
+            score = 1.0 - EPS
         
         print(f"[END] success={str(score >= 0.5).lower()} steps={step_count} rewards={score:.6f}", flush=True)
 
@@ -135,6 +134,7 @@ if __name__ == "__main__":
     try:
         asyncio.run(main())
     except Exception as e:
-        print(f"[STEP] step=1 reward={EPS}", flush=True)
-        print(f"[END] success=false steps=1 rewards={EPS}", flush=True)
-        print("CRITICAL ERROR:", str(e), flush=True)
+        print(f"CRITICAL ERROR: {str(e)}", flush=True)
+        # Fallback logs with safe rewards
+        print(f"[STEP] step=1 action=error:null reward={EPS:.6f} done=true error=true", flush=True)
+        print(f"[END] success=false steps=1 rewards={EPS:.6f}", flush=True)
