@@ -25,6 +25,8 @@ class StepResult(BaseModel):
 
 # --- Environment Implementation ---
 
+EPS = 0.01
+
 class TradeGuardEnv:
     def __init__(self):
         # 3 deterministic tasks with added noise trades
@@ -72,7 +74,7 @@ class TradeGuardEnv:
         self.current_task_idx = 0
         self.current_step = 0
         self.max_steps = 10
-        self.total_reward = 0.0
+        self.total_reward = EPS
         self.is_done = False
         self.visible_trades = []
         self.query_count = 0
@@ -87,7 +89,7 @@ class TradeGuardEnv:
             self.current_task_idx = 0 
         
         self.current_step = 0
-        self.total_reward = 0.0
+        self.total_reward = EPS
         self.is_done = False
         self.query_count = 0
         
@@ -103,7 +105,6 @@ class TradeGuardEnv:
 
     async def step(self, action: Action) -> StepResult:
         """Executes one step in the environment."""
-        EPS = 1e-6
         if self.is_done:
             return StepResult(
                 observation=self._get_observation(),
@@ -112,7 +113,7 @@ class TradeGuardEnv:
             )
 
         self.current_step += 1
-        reward = 0.0
+        reward = EPS
         
         task = self.tasks[self.current_task_idx]
         
@@ -131,7 +132,7 @@ class TradeGuardEnv:
             reward = 0.2 if new_trades else 0.05
         elif action.action_type == "submit":
             if action.content.strip() == task["ground_truth"]:
-                reward = 1.0
+                reward = 1.0 - EPS
                 self.is_done = True
             elif task["ground_truth"] in action.content or action.content in task["ground_truth"]:
                 # Partial match: simple logic
@@ -145,10 +146,10 @@ class TradeGuardEnv:
         reward -= (0.05 * self.current_step)
         
         # FINAL STRICT WRAPPER
-        if reward <= 0:
+        if reward <= EPS:
             reward = EPS
-        elif reward >= 1:
-            reward = 1 - EPS
+        elif reward >= (1.0 - EPS):
+            reward = 1.0 - EPS
         
         self.total_reward += reward
 
