@@ -25,7 +25,8 @@ class StepResult(BaseModel):
 
 # --- Environment Implementation ---
 
-EPS = 0.01
+#EPS = 0.01
+EPS = 1e-6
 
 class TradeGuardEnv:
     def __init__(self):
